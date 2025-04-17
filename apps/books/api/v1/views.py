@@ -13,7 +13,7 @@ from rest_framework.response import Response
 from drf_yasg.utils import swagger_auto_schema
 
 from apps.books.models import Book, Borrow
-from apps.books.permissions import IsClientUser, IsStaffOrReadOnly
+from apps.books.permissions import IsClientUser
 from apps.books.choices import BorrowStatus
 from apps.books.api.v1.serializers import (
     BookListSerializer,
@@ -30,7 +30,6 @@ class BookViewSet(viewsets.ModelViewSet):
     queryset = Book.objects.all().prefetch_related(
         models.Prefetch("borrows", queryset=Borrow.objects.select_related("user"))
     )
-    permission_classes = [IsStaffOrReadOnly]
     http_method_names = ["get", "post", "delete", "options", "head"]
 
     def get_serializer_class(self):
@@ -49,15 +48,20 @@ class BookViewSet(viewsets.ModelViewSet):
 
     @swagger_auto_schema(
         request_body=BookCreateSerializer,
-        responses={201: BookDetailSerializer, 400: "Bad Request"},
+        responses={200: BookDetailSerializer, 400: "Bad Request"},
     )
     def create(self, request: Request, *args, **kwargs) -> Response:
+        if not (request.user and request.user.user_type == "staff"):
+            return Response(
+                {"detail": "You do not have permission to perform this action."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         book = serializer.save()
         out = BookDetailSerializer(book)
         headers = self.get_success_headers(out.data)
-        return Response(out.data, status=status.HTTP_201_CREATED, headers=headers)
+        return Response(out.data, status=status.HTTP_200_OK, headers=headers)
 
     @swagger_auto_schema(request_body=None, responses={200: BorrowSerializer})
     @action(
@@ -78,7 +82,7 @@ class BookViewSet(viewsets.ModelViewSet):
                 book=book,
                 due_date=timezone.now().date() + timedelta(days=14),
             )
-        return Response(BorrowSerializer(borrow).data, status=201)
+        return Response(BorrowSerializer(borrow).data, status=200)
 
     @swagger_auto_schema(request_body=None)
     @action(

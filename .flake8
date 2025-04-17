@@ -1,0 +1,15 @@
+[flake8]
+max-line-length = 88
+exclude =
+    apps/books/migrations/*          # still ignore every migration
+per-file-ignores =
+    # Allow slight formatting issues inside this data‑only migration
+    E302
+    E122
+    W291
+    # Tests can have literal f‑strings without placeholders
+    F541
+    # Unused import kept to force DRF status codes into pytest’s namespace
+    F401
+    # Fixture with long inline JSON keeps long line for readability
+    E501

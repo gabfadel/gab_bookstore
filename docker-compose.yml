@@ -2,15 +2,10 @@ services:
   database:
     image: postgis/postgis:17-3.5
     env_file:
-      - docker/local/python_api.env 
+      - docker/local/postgres.env 
     restart: unless-stopped
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    healthcheck:                    
-      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER"]
-      interval: 5s
-      timeout: 3s
-      retries: 5
     networks: [gab_backend]
     ports: ["5432:5432"]
 
@@ -25,7 +20,7 @@ services:
       - docker/local/python_api.env
     depends_on:
       database:
-        condition: service_healthy   
+        condition: service_started   
       redis:
         condition: service_started
     volumes:
@@ -50,7 +45,7 @@ services:
     command: celery -A gab_bookstore.celery_wsgi worker -l INFO
     env_file: [docker/local/python_api.env]
     depends_on:
-      database: { condition: service_healthy }
+      database: { condition: service_started }
       redis: { condition: service_started }
     volumes: [.:/code:delegated]
     restart: unless-stopped

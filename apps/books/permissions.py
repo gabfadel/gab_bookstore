@@ -3,13 +3,6 @@ from __future__ import annotations
 from rest_framework import permissions, request
 
 
-class IsStaffOrReadOnly(permissions.BasePermission):
-    def has_permission(self, req: request.Request, _: object) -> bool:
-        return req.method in permissions.SAFE_METHODS or bool(
-            req.user and req.user.is_staff
-        )
-
-
 class IsClientUser(permissions.BasePermission):
     def has_permission(self, req: request.Request, _: object) -> bool:
         user = req.user

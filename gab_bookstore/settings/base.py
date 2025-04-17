@@ -48,7 +48,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": os.getenv("POSTGRES_DB", "db"),
+        "NAME": os.getenv("PGDATABASE", os.getenv("POSTGRES_DB", "gab_user")),
         "USER": os.getenv("POSTGRES_USER", "admin"),
         "PASSWORD": os.getenv("POSTGRES_PASSWORD", "postgres"),
         "HOST": os.getenv("DATABASE_HOST", "database"),
@@ -78,5 +78,4 @@ REST_FRAMEWORK = {
         "rest_framework.permissions.IsAuthenticated",
     ],
     "DEFAULT_PAGINATION_CLASS": "apps.api.pagination.LimitOffsetPagination",
-    "PAGE_SIZE": 20,
 }

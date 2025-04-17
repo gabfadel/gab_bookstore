@@ -1,0 +1,39 @@
+[
+    {
+      "model": "users.user",
+      "pk": 1,
+      "fields": {
+        "username": "admin",
+        "password": "pbkdf2_sha256$260000$quMhDZXs3UxE$Dk01Xz+3iDxrk0NYdxM6TXDGM2nxRtD04DdMTjn8r8A=",
+        "is_staff": true,
+        "is_superuser": true,
+        "user_type": "staff",
+        "is_active": true
+      }
+    },
+    {
+      "model": "users.user",
+      "pk": 2,
+      "fields": {
+        "username": "client1",
+        "password": "pbkdf2_sha256$260000$BhPKX0u12eAH$ZGetXNuPqmLAl/a+qDtrZ5i+Mcozr0QFMPCfOeb/8LE=",
+        "is_staff": false,
+        "is_superuser": false,
+        "user_type": "client",
+        "is_active": true
+      }
+    },
+    {
+      "model": "users.user",
+      "pk": 3,
+      "fields": {
+        "username": "client2",
+        "password": "pbkdf2_sha256$260000$Cu0sgxyV9wQD$nmJmQLm8bI48Uoy7jekWglgzMvjgnvBbQuZHa8tVq2o=",
+        "is_staff": false,
+        "is_superuser": false,
+        "user_type": "client",
+        "is_active": true
+      }
+    }
+  ]
+  

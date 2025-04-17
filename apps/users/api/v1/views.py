@@ -60,7 +60,7 @@ def blacklist_view(request):
     ),
     request_body=UserCreateSerializer,
     responses={
-        201: openapi.Response(
+        200: openapi.Response(
             description="User created",
             schema=openapi.Schema(
                 type=openapi.TYPE_OBJECT,
@@ -89,4 +89,4 @@ def create_user(request):
             {"detail": "User already exists", "id": existing_user.id}, status=200
         )
     user = serializer.save()
-    return Response({"detail": "User created", "id": user.id}, status=201)
+    return Response({"detail": "User created", "id": user.id}, status=200)
