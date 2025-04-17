@@ -18,11 +18,6 @@ To run with Docker Compose, create three environment files inside `docker/local/
 
 ### Example: `docker/local/postgres.env`
 ```env
-# Django Settings (API)
-DJANGO_SECRET_KEY=
-DJANGO_DEBUG=
-DJANGO_ALLOWED_HOSTS=
-
 # Database Settings (Postgres)
 POSTGRES_DB=
 POSTGRES_USER=
