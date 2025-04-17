@@ -48,30 +48,16 @@ class BookCreateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Book
-        fields = [
-            "isbn",
-            "title",
-            "author",
-            "description",
-            "published_date",
-        ]
+        fields = ["isbn", "copies"]
 
-    def validate_copies(self, value: int) -> int:
-        if value < 0:
-            raise serializers.ValidationError("copies must be ≥ 0.")
-        return value
-
-    def validate_isbn(self, value):
+    def validate_isbn(self, value: str) -> str:
         return value.replace("-", "")
 
-    def create(self, validated: Dict[str, Any]) -> Book:
-        isbn = validated.get("isbn")
+    def create(self, validated_data: Dict[str, Any]) -> Book:
+        isbn = validated_data["isbn"]
+        google_data = fetch_google_books_info(isbn)
 
-        clean_isbn = isbn.replace("-", "") if isbn else ""
-
-        google = fetch_google_books_info(clean_isbn) if clean_isbn else {}
-
-        for field in [
+        to_fill = [
             "title",
             "author",
             "description",
@@ -79,12 +65,25 @@ class BookCreateSerializer(serializers.ModelSerializer):
             "cover_thumbnail",
             "publisher",
             "page_count",
-        ]:
-            validated.setdefault(field, google.get(field))
+        ]
+        for field in to_fill:
+            if google_data.get(field):
+                validated_data[field] = google_data[field]
 
-        if not validated.get("title"):
-            raise serializers.ValidationError("Title missing and not found via ISBN.")
-        return Book.objects.create(**validated)
+        required = ["title", "author", "description", "published_date"]
+        missing = [f for f in required if not validated_data.get(f)]
+        if missing:
+            raise serializers.ValidationError(
+                {
+                    "detail": (
+                        "Mandatory fields missing or not found in Google Books API: "
+                        f"{', '.join(missing)}"
+                    )
+                }
+            )
+
+        validated_data.setdefault("copies", 1)
+        return Book.objects.create(**validated_data)
 
 
 class BorrowSerializer(serializers.ModelSerializer):

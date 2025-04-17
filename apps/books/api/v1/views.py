@@ -31,12 +31,15 @@ class BookViewSet(viewsets.ModelViewSet):
         models.Prefetch("borrows", queryset=Borrow.objects.select_related("user"))
     )
     permission_classes = [IsStaffOrReadOnly]
+    http_method_names = ["get", "post", "delete", "options", "head"]
 
     def get_serializer_class(self):
         if self.action == "create":
             return BookCreateSerializer
         elif self.action == "list":
             return BookListSerializer
+        elif self.action in ("borrow", "return_it"):
+            return
         return BookDetailSerializer
 
     @swagger_auto_schema(request_body=None)
@@ -44,7 +47,19 @@ class BookViewSet(viewsets.ModelViewSet):
     def list(self, request: Request, *args, **kwargs) -> Response:
         return super().list(request, *args, **kwargs)
 
-    @swagger_auto_schema(request_body=None)
+    @swagger_auto_schema(
+        request_body=BookCreateSerializer,
+        responses={201: BookDetailSerializer, 400: "Bad Request"},
+    )
+    def create(self, request: Request, *args, **kwargs) -> Response:
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        book = serializer.save()
+        out = BookDetailSerializer(book)
+        headers = self.get_success_headers(out.data)
+        return Response(out.data, status=status.HTTP_201_CREATED, headers=headers)
+
+    @swagger_auto_schema(request_body=None, responses={200: BorrowSerializer})
     @action(
         detail=True,
         methods=["post"],

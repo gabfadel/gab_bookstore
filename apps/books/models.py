@@ -12,9 +12,11 @@ class Book(models.Model):
 
     isbn = models.CharField(max_length=20, unique=True)
     title = models.CharField(max_length=255)
-    author = models.CharField(max_length=255, blank=True)
-    description = models.TextField(blank=True, null=True)
-    published_date = models.CharField(max_length=20, blank=True, null=True)
+    author = models.CharField(
+        max_length=255,
+    )
+    description = models.TextField()
+    published_date = models.CharField(max_length=20)
     cover_thumbnail = models.URLField(blank=True, null=True)
     publisher = models.CharField(max_length=255, blank=True, null=True)
     page_count = models.PositiveIntegerField(blank=True, null=True)
