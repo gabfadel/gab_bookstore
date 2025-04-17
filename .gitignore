@@ -1,0 +1,25 @@
+.github/*
+!.github/workflows 
+
+.devcontainer
+
+celerybeat.pid
+.env
+venv
+.venv
+
+.zip
+public
+.pytest_cache
+docker/production/*.env
+docker/local/*.env
+
+# Ignora todos os arquivos .env em qualquer diretório
+**/*.env
+
+# Ignora especificamente os arquivos .env nas pastas docker
+/docker/production/*.env
+/docker/local/*.env
+
+# Ignora o arquivo específico
+/docker/production/python_admin.env
