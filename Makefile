@@ -29,8 +29,8 @@ shell: ## Run the django shell inside the container
 	docker compose run --rm api python manage.py shell
 
 test: ## Run Tests in container
-	docker compose run -e "DJANGO_SETTINGS_MODULE=gab_bookstore.settings.api_test" --rm api pytest
-
+	docker compose run --rm api python manage.py test
+	
 superuser: ## Create superuser
 	docker compose run --rm admin python manage.py createsuperuser
 

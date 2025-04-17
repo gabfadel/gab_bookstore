@@ -20,7 +20,7 @@ services:
     image: postgis/postgis:17-3.5
     restart: always
     env_file:
-      - docker/local/python_api.env
+      - docker/local/postgres.env
     expose:
       - "5432"
 
