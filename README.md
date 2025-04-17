@@ -251,12 +251,10 @@ Prefix: `/api/v1/books/books/`
 ### 6.3 Create Book (POST)
 - **POST** `/api/v1/books/books/`  
 - **Access:** **staff**  
-- **Minimal body**:
-  ```json
-  { "isbn": "9780007458424" }
-  ```
+- **ISBN by query param**:
+  use query param ?isbn=<ISBN>, enriquecimento via Google Book
 - **Enrichment:** Google Books is queried to fill missing fields.  
-- **Response 201**: created object  
+- **Response 200**: created object  
 - **Errors**:  
   - `400 Bad Request` (invalid ISBN or title not found)  
   - `403 Forbidden` (not staff)
@@ -272,7 +270,7 @@ Prefix: `/api/v1/books/books/`
 - **Business logic:**  
   - Atomically decrement `copies`.  
   - Create `Borrow` with `due_date = today + 14 days`.  
-- **Response 201**: borrow data  
+- **Response 200**: borrow data  
 - **Errors**:  
   - `400 Bad Request` (no copies left)  
   - `401/403`
