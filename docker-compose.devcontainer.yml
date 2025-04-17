@@ -1,47 +1,51 @@
-
 services:
   vscode:
     build:
       context: .
       dockerfile: docker/local/Dockerfile
     command: /bin/sh -c "while sleep 1000; do :; done"
+    restart: always
     volumes:
       - .:/code:cached
-    ports:
-      - "5678:5678"
-      - "5679:5679"
+    expose:
+      - "5678"
+      - "5679"
     env_file:
       - docker/local/python_api.env
     depends_on:
-      - db
+      - database
       - redis
 
-  db:
+  database:
     image: postgis/postgis:17-3.5
+    restart: always
     env_file:
       - docker/local/python_api.env
-    ports:
-      - "5433:5432"
+    expose:
+      - "5432"
 
   redis:
     image: redis:alpine
-    ports:
-      - "6379:6379"
+    restart: always
+    expose:
+      - "6379"
 
   pga:
     image: dpage/pgadmin4
+    restart: always
     environment:
       - PGADMIN_DEFAULT_EMAIL=admin@admin.com
       - PGADMIN_DEFAULT_PASSWORD=admin
-    ports:
-      - "5050:80"
+    expose:
+      - "80"
     depends_on:
       - db
 
   flower:
     image: mher/flower
-    ports:
-      - "5555:5555"
+    restart: always
+    expose:
+      - "5555"
     environment:
       - CELERY_BROKER_URL=redis://redis:6379/1
     depends_on:

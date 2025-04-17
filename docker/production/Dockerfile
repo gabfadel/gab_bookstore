@@ -1,27 +1,47 @@
+# Stage 1: Builder
+FROM python:3.12-slim AS builder
+
+WORKDIR /code
+
+# Install system dependencies needed for build
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    libpq-dev \
+    gdal-bin \
+    libgdal-dev \
+    python3-gdal \
+ && rm -rf /var/lib/apt/lists/*
+
+# Copy and install dependencies
+COPY requirements/base.txt requirements/production.txt /code/requirements/
+RUN pip install --upgrade pip && \
+    pip wheel --no-cache-dir --no-deps --wheel-dir /code/wheels -r /code/requirements/production.txt
+
+# Stage 2: Final image
 FROM python:3.12-slim
 
-# Prevent Python from writing pyc files and buffers stdout/stderr
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1
 
 WORKDIR /code
 
-# Install system dependencies needed to build psycopg2 (libpq-dev and build-essential)
+# Install runtime dependencies
 RUN apt-get update && apt-get install -y \
-    build-essential \
     libpq-dev \
+    gdal-bin \
+    libgdal-dev \
+    python3-gdal \
  && rm -rf /var/lib/apt/lists/*
 
-# Copy requirement files
-COPY requirements/base.txt requirements/dev.txt /code/requirements/
-
-# Install dev dependencies
+# Copy wheels and install
+COPY --from=builder /code/wheels /wheels
+COPY --from=builder /code/requirements/production.txt .
 RUN pip install --upgrade pip && \
-    pip install --no-cache-dir -r /code/requirements/dev.txt
+    pip install --no-cache /wheels/*
 
-# Copy entire codebase
+# Copy project
 COPY . /code/
 
 EXPOSE 8000
 
-CMD ["/bin/bash"]
+CMD ["gunicorn", "gab_bookstore.wsgi:application", "--bind", "0.0.0.0:8000"]

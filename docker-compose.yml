@@ -1,94 +1,93 @@
-
 services:
-  api:
-    build:
-      context: .
-      dockerfile: docker/local/Dockerfile
-    image: gab_bookstore_backend/api
-    command: python manage.py runserver 0.0.0.0:8000
-    volumes:
-      - .:/code
-    ports:
-      - "8000:8000"
-    env_file:
-      - docker/local/python_api.env
-    depends_on:
-      - database
-      - redis
-    networks:
-      - gab_bookstore_backend-docker
-
-  admin:
-    build:
-      context: .
-      dockerfile: docker/local/Dockerfile
-    image: gab_bookstore_backend/admin
-    command: python manage.py runserver 0.0.0.0:9000
-    volumes:
-      - .:/code
-    ports:
-      - "9000:9000"
-    env_file:
-      - docker/local/python_admin.env
-    depends_on:
-      - database
-      - redis
-    networks:
-      - gab_bookstore_backend-docker
-
   database:
     image: postgis/postgis:17-3.5
     env_file:
+      - docker/local/python_api.env 
+    restart: unless-stopped
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:                    
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks: [gab_backend]
+    ports: ["5432:5432"]
+
+  api: &api
+    build:
+      context: .
+      dockerfile: docker/local/Dockerfile
+    command: >
+      sh -c "python manage.py migrate &&
+             python manage.py runserver 0.0.0.0:8000"
+    env_file:
       - docker/local/python_api.env
-    ports:
-      - "5433:5432"
-    networks:
-      - gab_bookstore_backend-docker
+    depends_on:
+      database:
+        condition: service_healthy   
+      redis:
+        condition: service_started
+    volumes:
+      - .:/code
+    ports: ["8000:8000"]
+    restart: unless-stopped
+    networks: [gab_backend]
+
+  admin:
+    <<: *api                         
+    command: >
+      sh -c "python manage.py migrate &&
+             python manage.py runserver 0.0.0.0:9000"
+    ports: ["9000:9000"]
+    env_file:
+      - docker/local/python_admin.env
 
   celery:
-    image: gab_bookstore_backend/api
-    command: /bin/bash -c "celery -A gab_bookstore.celery_wsgi worker -l INFO"
-    env_file:
-      - docker/local/python_api.env
-    links:
-      - database
-      - redis
-    volumes:
-      - .:/code:delegated
+    build:
+      context: .
+      dockerfile: docker/local/Dockerfile
+    command: celery -A gab_bookstore.celery_wsgi worker -l INFO
+    env_file: [docker/local/python_api.env]
     depends_on:
-      - api
-      - database
-    networks:
-      - gab_bookstore_backend-docker
+      database: { condition: service_healthy }
+      redis: { condition: service_started }
+    volumes: [.:/code:delegated]
+    restart: unless-stopped
+    networks: [gab_backend]
 
   celery-beat:
-    image: gab_bookstore_backend/api
-    command: /bin/bash -c "celery -A gab_bookstore.celery_wsgi beat -l INFO --scheduler django_celery_beat.schedulers:DatabaseScheduler --pidfile="
-    env_file:
-      - docker/local/python_api.env
+    build:
+      context: .
+      dockerfile: docker/local/Dockerfile
+    command: celery -A gab_bookstore.celery_wsgi beat \
+             -l INFO --scheduler django_celery_beat.schedulers:DatabaseScheduler --pidfile=
+    env_file: [docker/local/python_api.env]
     depends_on:
-      - celery
-    volumes:
-      - .:/code:delegated
-    networks:
-      - gab_bookstore_backend-docker
+      celery: { condition: service_started }
+    volumes: [.:/code:delegated]
+    restart: unless-stopped
+    networks: [gab_backend]
 
   flower:
     image: mher/flower:2.0
-    ports:
-      - "5555:5555"
     environment:
       - CELERY_BROKER_URL=redis://redis:6379/1
+    ports: ["5555:5555"]
     depends_on:
-      - redis
-    networks:
-      - gab_bookstore_backend-docker
+      redis: { condition: service_started }
+    restart: unless-stopped
+    networks: [gab_backend]
 
   redis:
     image: redis:alpine
-    networks:
-      - gab_bookstore_backend-docker
+    ports: ["6379:6379"]
+    restart: unless-stopped
+    networks: [gab_backend]
 
 networks:
-  gab_bookstore_backend-docker:
+  gab_backend:
     driver: bridge
+
+volumes:
+  postgres_data:

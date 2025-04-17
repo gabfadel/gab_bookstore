@@ -4,6 +4,8 @@ from rest_framework.response import Response
 
 
 class LimitOffsetPagination(BaseLimitOffsetPagination):
+    default_limit = 20
+
     def get_paginated_response(self, data, extra_context=()):
         return Response(
             OrderedDict(

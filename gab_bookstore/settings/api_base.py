@@ -22,6 +22,7 @@ INSTALLED_APPS = [
     "apps.api",
     "apps.books",
     "apps.users",
+    "apps.core",
 ]
 
 ROOT_URLCONF = "gab_bookstore.api_urls"

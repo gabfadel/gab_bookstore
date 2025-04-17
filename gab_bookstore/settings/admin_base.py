@@ -15,6 +15,7 @@ INSTALLED_APPS = [
     # add your apps here
     "apps.books",
     "apps.users",
+    "apps.core",
 ]
 
 ROOT_URLCONF = "gab_bookstore.admin_urls"
